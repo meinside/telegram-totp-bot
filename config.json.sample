@@ -1,0 +1,4 @@
+{
+    "telegram_bot_token": "0123456:ABCDEFG_9876543210WXYZ",
+    "database_file_location": "/home/ubuntu/.local/totp.db"
+}
