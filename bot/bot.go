@@ -330,7 +330,9 @@ func helpMessage() string {
 %s : %s
 %s : %s
 %s : %s
-%s : %s`,
+%s : %s
+
+* Source code: https://github.com/meinside/telegram-totp-bot`,
 		botCommandNewTOTP, botCommandDescriptionNewTOTP,
 		botCommandTOTP, botCommandDescriptionTOTP,
 		botCommandListTOTP, botCommandDescriptionListTOTP,
