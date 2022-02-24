@@ -120,6 +120,11 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 						if err = database.DeleteTOTP(db, userID, totpID); err == nil {
 							if editableMessage, err := database.GetEditableMessage(db, editableID); err == nil {
 								bot.EditMessageText("Your TOTP was successfully deleted.", tgbot.OptionsEditMessageText{}.SetIDs(chatID, editableMessage.MessageID))
+
+								// delete editable message cache
+								if err := database.DeleteEditableMessage(db, editableID); err != nil {
+									log.Printf("Failed to delete editable message cache: %s", err)
+								}
 							}
 						} else {
 							sendMessage(bot, chatID, fmt.Sprintf("Failed to delete your TOTP: %s", err), false)
@@ -136,6 +141,11 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 							// update message with generated value
 							if editableMessage, err := database.GetEditableMessage(db, editableID); err == nil {
 								bot.EditMessageText(generated, tgbot.OptionsEditMessageText{}.SetIDs(chatID, editableMessage.MessageID))
+
+								// delete editable message cache
+								if err := database.DeleteEditableMessage(db, editableID); err != nil {
+									log.Printf("Failed to delete editable message cache: %s", err)
+								}
 							}
 						} else {
 							sendError(bot, chatID, fmt.Sprintf("Failed to generate OTP: %s", err), false)
