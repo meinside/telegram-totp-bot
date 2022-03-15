@@ -2,6 +2,10 @@
 
 A Telegram Bot for managing (registering, deleting, generating tokens) TOTP.
 
+* digits: 6
+* interval: 30 seconds
+* algorithm: hmac-sha1
+
 ## Installation
 
 ```bash
