@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	tgbot "github.com/meinside/telegram-bot-go"
+	"github.com/meinside/version-go"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -107,7 +109,7 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 
 			data := query.Data
 			if data != nil {
-				bot.SendChatAction(chatID, tgbot.ChatActionTyping)
+				bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
 				userID := query.From.ID
 
@@ -187,7 +189,7 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 				case botCommandNewTOTP:
 					sendMessage(bot, chatID, "Input name for your OTP:", false)
 				case botCommandListTOTP:
-					bot.SendChatAction(chatID, tgbot.ChatActionTyping)
+					bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
 					if totps, err := database.ListTOTPs(db, userID); err == nil {
 						if len(totps) == 0 {
@@ -203,7 +205,7 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 						sendError(bot, chatID, fmt.Sprintf("Failed to list your TOTPs: %s", err), false)
 					}
 				case botCommandDeleteTOTP:
-					bot.SendChatAction(chatID, tgbot.ChatActionTyping)
+					bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
 					if totps, err := database.ListTOTPs(db, userID); err == nil {
 						if len(totps) == 0 {
@@ -243,7 +245,7 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 						sendError(bot, chatID, fmt.Sprintf("Failed to list your TOTPs: %s", err), false)
 					}
 				case botCommandTOTP:
-					bot.SendChatAction(chatID, tgbot.ChatActionTyping)
+					bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
 					if totps, err := database.ListTOTPs(db, userID); err == nil {
 						if len(totps) == 0 {
@@ -290,7 +292,7 @@ func pollMessages(bot *tgbot.Bot, db *gorm.DB) {
 					sendError(bot, chatID, fmt.Sprintf("No such command: %s", text), true)
 				}
 			} else {
-				bot.SendChatAction(chatID, tgbot.ChatActionTyping)
+				bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
 				if temp, _ := database.GetTempTOTP(db, userID); temp != nil {
 					if temp.Name == nil {
@@ -342,12 +344,15 @@ func helpMessage() string {
 %s : %s
 %s : %s
 
+* version: %s
+
 * Source code: https://github.com/meinside/telegram-totp-bot`,
 		botCommandNewTOTP, botCommandDescriptionNewTOTP,
 		botCommandTOTP, botCommandDescriptionTOTP,
 		botCommandListTOTP, botCommandDescriptionListTOTP,
 		botCommandDeleteTOTP, botCommandDescriptionDeleteTOTP,
 		botCommandHelp, botCommandDescriptionHelp,
+		version.Minimum(),
 	)
 }
 

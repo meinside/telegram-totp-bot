@@ -1,2 +1,3 @@
 telegram-totp-bot
 config.json
+*.sqlite
