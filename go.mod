@@ -3,14 +3,15 @@ module github.com/meinside/telegram-totp-bot
 go 1.17
 
 require (
-	github.com/meinside/telegram-bot-go v0.6.6
-	github.com/xlzd/gotp v0.0.0-20220110052318-fab697c03c2c
-	gorm.io/driver/sqlite v1.3.1
-	gorm.io/gorm v1.23.2
+	github.com/meinside/telegram-bot-go v0.8.6
+	github.com/meinside/version-go v0.0.2
+	github.com/xlzd/gotp v0.1.0
+	gorm.io/driver/sqlite v1.5.1
+	gorm.io/gorm v1.25.1
 )
 
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
-	github.com/mattn/go-sqlite3 v1.14.9 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 )
