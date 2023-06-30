@@ -6,8 +6,8 @@ require (
 	github.com/meinside/telegram-bot-go v0.9.7
 	github.com/meinside/version-go v0.0.2
 	github.com/xlzd/gotp v0.1.0
-	gorm.io/driver/sqlite v1.5.1
-	gorm.io/gorm v1.25.1
+	gorm.io/driver/sqlite v1.5.2
+	gorm.io/gorm v1.25.2
 )
 
 require (

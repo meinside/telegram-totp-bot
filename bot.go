@@ -1,4 +1,4 @@
-package bot
+package main
 
 import (
 	"fmt"
@@ -11,8 +11,6 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-
-	"github.com/meinside/telegram-totp-bot/database"
 )
 
 const (
@@ -74,7 +72,7 @@ func Run(telegramAPIToken, dbFilepath string) {
 		}
 
 		// migrate database
-		if err = db.AutoMigrate(&database.TOTP{}, &database.TempTOTP{}, &database.EditableMessageCache{}); err != nil {
+		if err = db.AutoMigrate(&TOTP{}, &TempTOTP{}, &EditableMessageCache{}); err != nil {
 			log.Fatalf("Failed to migrate database: %s", err)
 		}
 
@@ -127,7 +125,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 			case botCommandListTOTP:
 				bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
-				if totps, err := database.ListTOTPs(db, userID); err == nil {
+				if totps, err := ListTOTPs(db, userID); err == nil {
 					if len(totps) == 0 {
 						sendMessage(bot, chatID, "You have no TOTP registered yet.", true)
 					} else {
@@ -143,7 +141,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 			case botCommandDeleteTOTP:
 				bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
-				if totps, err := database.ListTOTPs(db, userID); err == nil {
+				if totps, err := ListTOTPs(db, userID); err == nil {
 					if len(totps) == 0 {
 						sendMessage(bot, chatID, "You have no TOTP registered yet.", true)
 					} else {
@@ -151,7 +149,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 
 						var inlineKeyboard = [][]tgbot.InlineKeyboardButton{}
 						var cancelableID uint
-						if cancelableID, err = database.SaveEditableMessage(db, userID); err == nil {
+						if cancelableID, err = SaveEditableMessage(db, userID); err == nil {
 							for _, t := range totps {
 								kvs[t.Name] = fmt.Sprintf("%s %d,%d", botCommandDeleteTOTP, t.ID, cancelableID)
 							}
@@ -170,7 +168,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 						if res := bot.SendMessage(chatID, "Select TOTP to delete:", tgbot.OptionsSendMessage{}.SetReplyMarkup(tgbot.InlineKeyboardMarkup{
 							InlineKeyboard: inlineKeyboard,
 						})); res.Ok {
-							if err = database.UpdateEditableMessage(db, cancelableID, res.Result.MessageID); err != nil {
+							if err = UpdateEditableMessage(db, cancelableID, res.Result.MessageID); err != nil {
 								log.Printf("Failed to update cancelable message: %s", err)
 							}
 						} else {
@@ -183,7 +181,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 			case botCommandTOTP:
 				bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
-				if totps, err := database.ListTOTPs(db, userID); err == nil {
+				if totps, err := ListTOTPs(db, userID); err == nil {
 					if len(totps) == 0 {
 						sendMessage(bot, chatID, "You have no TOTP registered yet.", true)
 					} else {
@@ -191,7 +189,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 
 						var inlineKeyboard = [][]tgbot.InlineKeyboardButton{}
 						var cancelableID uint
-						if cancelableID, err = database.SaveEditableMessage(db, userID); err == nil {
+						if cancelableID, err = SaveEditableMessage(db, userID); err == nil {
 							for _, t := range totps {
 								kvs[t.Name] = fmt.Sprintf("%s %d,%d", botCommandTOTP, t.ID, cancelableID)
 							}
@@ -210,7 +208,7 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 						if res := bot.SendMessage(chatID, "Select TOTP to generate OTP:", tgbot.OptionsSendMessage{}.SetReplyMarkup(tgbot.InlineKeyboardMarkup{
 							InlineKeyboard: inlineKeyboard,
 						})); res.Ok {
-							if err = database.UpdateEditableMessage(db, cancelableID, res.Result.MessageID); err != nil {
+							if err = UpdateEditableMessage(db, cancelableID, res.Result.MessageID); err != nil {
 								log.Printf("Failed to update cancelable message: %s", err)
 							}
 						} else {
@@ -230,11 +228,11 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 		} else {
 			bot.SendChatAction(chatID, tgbot.ChatActionTyping, tgbot.OptionsSendChatAction{})
 
-			if temp, _ := database.GetTempTOTP(db, userID); temp != nil {
+			if temp, _ := GetTempTOTP(db, userID); temp != nil {
 				if temp.Name == nil {
 					name := text
 
-					if err := database.SaveTempTOTP(db, userID, temp.ID, &name); err == nil {
+					if err := SaveTempTOTP(db, userID, temp.ID, &name); err == nil {
 						sendMessage(bot, chatID, fmt.Sprintf("Input secret for your TOTP `%s`:", name), false)
 					} else {
 						sendError(bot, chatID, fmt.Sprintf("Failed to save temporary TOTP: %s", err), false)
@@ -243,8 +241,8 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 					name := *temp.Name
 					secret := text
 
-					if _, err := database.SaveTOTP(db, userID, name, secret); err == nil {
-						if err := database.DeleteTempTOTP(db, userID, temp.ID); err != nil {
+					if _, err := SaveTOTP(db, userID, name, secret); err == nil {
+						if err := DeleteTempTOTP(db, userID, temp.ID); err != nil {
 							sendError(bot, chatID, fmt.Sprintf("Failed to delete temporary TOTP with id: %d", temp.ID), false)
 						}
 
@@ -285,12 +283,12 @@ func handleCallbackQuery(bot *tgbot.Bot, db *gorm.DB, query tgbot.CallbackQuery)
 			totpID := uint(ids[0])
 			editableID := uint(ids[1])
 			if err == nil {
-				if err = database.DeleteTOTP(db, userID, totpID); err == nil {
-					if editableMessage, err := database.GetEditableMessage(db, editableID); err == nil {
+				if err = DeleteTOTP(db, userID, totpID); err == nil {
+					if editableMessage, err := GetEditableMessage(db, editableID); err == nil {
 						bot.EditMessageText("Your TOTP was successfully deleted.", tgbot.OptionsEditMessageText{}.SetIDs(chatID, editableMessage.MessageID))
 
 						// delete editable message cache
-						if err := database.DeleteEditableMessage(db, editableID); err != nil {
+						if err := DeleteEditableMessage(db, editableID); err != nil {
 							log.Printf("Failed to delete editable message cache: %s", err)
 						}
 					}
@@ -305,13 +303,13 @@ func handleCallbackQuery(bot *tgbot.Bot, db *gorm.DB, query tgbot.CallbackQuery)
 			totpID := uint(ids[0])
 			editableID := uint(ids[1])
 			if err == nil {
-				if generated, err := database.GenerateTOTP(db, userID, totpID); err == nil {
+				if generated, err := GenerateTOTP(db, userID, totpID); err == nil {
 					// update message with generated value
-					if editableMessage, err := database.GetEditableMessage(db, editableID); err == nil {
+					if editableMessage, err := GetEditableMessage(db, editableID); err == nil {
 						bot.EditMessageText(generated, tgbot.OptionsEditMessageText{}.SetIDs(chatID, editableMessage.MessageID))
 
 						// delete editable message cache
-						if err := database.DeleteEditableMessage(db, editableID); err != nil {
+						if err := DeleteEditableMessage(db, editableID); err != nil {
 							log.Printf("Failed to delete editable message cache: %s", err)
 						}
 					}
@@ -327,12 +325,12 @@ func handleCallbackQuery(bot *tgbot.Bot, db *gorm.DB, query tgbot.CallbackQuery)
 			ids, err := parseCallbackQueryData(botCommandCancel, *data)
 			cancelableID := uint(ids[0])
 			if err == nil {
-				if cancelableMessage, err := database.GetEditableMessage(db, cancelableID); err == nil {
+				if cancelableMessage, err := GetEditableMessage(db, cancelableID); err == nil {
 					// update message as 'canceled'
 					bot.EditMessageText("Canceled", tgbot.OptionsEditMessageText{}.SetIDs(chatID, cancelableMessage.MessageID))
 
 					// delete editable message cache
-					if err := database.DeleteEditableMessage(db, cancelableID); err != nil {
+					if err := DeleteEditableMessage(db, cancelableID); err != nil {
 						log.Printf("Failed to delete editable message cache: %s", err)
 					}
 				}
