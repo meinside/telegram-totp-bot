@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/meinside/telegram-totp-bot/bot"
 )
 
 // config struct for this bot
@@ -35,7 +33,7 @@ func main() {
 	}
 
 	// start running the bot
-	bot.Run(conf.TelegramBotToken, conf.DatabaseFileLocation)
+	Run(conf.TelegramBotToken, conf.DatabaseFileLocation)
 }
 
 func printUsageAndExit() {
