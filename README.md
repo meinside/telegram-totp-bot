@@ -60,7 +60,7 @@ MemoryMax=128M
 WantedBy=multi-user.target
 ```
 
-at `/lib/systemd/system/telegram-totp-bot.service`,
+at `/etc/systemd/system/telegram-totp-bot.service`,
 
 and run:
 
