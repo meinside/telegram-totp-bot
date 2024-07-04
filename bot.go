@@ -22,15 +22,19 @@ const (
 	botCommandTOTP       = "/otp"
 	botCommandHelp       = "/help"
 	botCommandCancel     = "/cancel"
+	botCommandPrivacy    = "/privacy"
 
 	botCommandDescriptionNewTOTP    = "Create a new TOTP."
 	botCommandDescriptionListTOTP   = "List all your TOTPs."
 	botCommandDescriptionTOTP       = "Generate a TOTP code."
 	botCommandDescriptionDeleteTOTP = "Delete your TOTP."
 	botCommandDescriptionHelp       = "Display help message."
+	botCommandDescriptionPrivacy    = "Display privacy policy."
 
 	// Telegram Bot polling interval seconds
 	pollingIntervalSeconds = 1
+
+	githubPageURL = "https://github.com/meinside/telegram-totp-bot"
 )
 
 func Run(telegramAPIToken, dbFilepath string) {
@@ -58,6 +62,10 @@ func Run(telegramAPIToken, dbFilepath string) {
 			{
 				Command:     botCommandDeleteTOTP,
 				Description: botCommandDescriptionDeleteTOTP,
+			},
+			{
+				Command:     botCommandPrivacy,
+				Description: botCommandDescriptionPrivacy,
 			},
 			{
 				Command:     botCommandHelp,
@@ -222,6 +230,8 @@ func handleMessage(bot *tgbot.Bot, db *gorm.DB, message tgbot.Message) {
 				fallthrough
 			case botCommandHelp:
 				sendMessage(bot, chatID, helpMessage(), true)
+			case botCommandPrivacy:
+				sendMessage(bot, chatID, privacyPolicyMessage(), true)
 			default:
 				sendError(bot, chatID, fmt.Sprintf("No such command: %s", text), true)
 			}
@@ -353,17 +363,26 @@ func helpMessage() string {
 %s : %s
 %s : %s
 %s : %s
+%s : %s
 
 * version: %s
 
-* Source code: https://github.com/meinside/telegram-totp-bot`,
+* Source code: %s`,
 		botCommandNewTOTP, botCommandDescriptionNewTOTP,
 		botCommandTOTP, botCommandDescriptionTOTP,
 		botCommandListTOTP, botCommandDescriptionListTOTP,
 		botCommandDeleteTOTP, botCommandDescriptionDeleteTOTP,
+		botCommandPrivacy, botCommandDescriptionPrivacy,
 		botCommandHelp, botCommandDescriptionHelp,
 		version.Minimum(),
+		githubPageURL,
 	)
+}
+
+func privacyPolicyMessage() string {
+	return fmt.Sprintf(`Privacy Policy:
+
+%s/raw/master/PRIVACY.md`, githubPageURL)
 }
 
 func sendMessage(bot *tgbot.Bot, chatID int64, message string, withButtons bool) {
@@ -390,20 +409,21 @@ func sendError(bot *tgbot.Bot, chatID int64, message string, withButtons bool) {
 }
 
 func keyboardMarkups() tgbot.ReplyKeyboardMarkup {
-	return tgbot.ReplyKeyboardMarkup{
-		Keyboard: [][]tgbot.KeyboardButton{
-			{
-				tgbot.KeyboardButton{Text: botCommandTOTP},
-			},
-			{
-				tgbot.KeyboardButton{Text: botCommandNewTOTP},
-				tgbot.KeyboardButton{Text: botCommandListTOTP},
-				tgbot.KeyboardButton{Text: botCommandDeleteTOTP},
-				tgbot.KeyboardButton{Text: botCommandHelp},
-			},
+	return tgbot.NewReplyKeyboardMarkup([][]tgbot.KeyboardButton{
+		{
+			tgbot.KeyboardButton{Text: botCommandTOTP},
 		},
-		ResizeKeyboard:  true,
-		OneTimeKeyboard: true,
-		Selective:       true,
-	}
+		{
+			tgbot.KeyboardButton{Text: botCommandNewTOTP},
+			tgbot.KeyboardButton{Text: botCommandListTOTP},
+			tgbot.KeyboardButton{Text: botCommandDeleteTOTP},
+		},
+		{
+
+			tgbot.KeyboardButton{Text: botCommandPrivacy},
+			tgbot.KeyboardButton{Text: botCommandHelp},
+		},
+	}).SetResizeKeyboard(true).
+		SetOneTimeKeyboard(true).
+		SetSelective(true)
 }
